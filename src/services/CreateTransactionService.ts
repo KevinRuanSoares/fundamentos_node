@@ -15,7 +15,7 @@ class CreateTransactionService {
   }
 
   public execute({ title, type, value }: Request): Transaction {
-    if (type !== 'income' && type !== 'outcome') {
+    if (!['income', 'outcome'].includes(type)) {
       throw Error('Value of field Type is invalid');
     }
 
@@ -23,11 +23,10 @@ class CreateTransactionService {
       throw Error('Value of field Value must be number');
     }
 
-    const balance = this.transactionsRepository.getBalance();
-    const verifyTotalBalance = balance.total - value;
+    const { total } = this.transactionsRepository.getBalance();
 
-    if (verifyTotalBalance < 0 && type === 'outcome') {
-      throw Error('Invalid value');
+    if (type === 'outcome' && total < value) {
+      throw Error('You do not have enough balance');
     }
 
     const transaction = this.transactionsRepository.create({
